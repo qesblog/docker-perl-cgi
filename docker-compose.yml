@@ -1,0 +1,52 @@
+version: '3'
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    restart: on-failure
+    labels:
+      - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy"
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - proxy:/etc/nginx/vhost.d
+      - proxy:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - shared
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: on-failure
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - proxy:/etc/nginx/vhost.d
+      - proxy:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs:rw
+    networks:
+      - shared
+
+  bbs:
+    image: azum/bbs
+    container_name: bbs
+    build:
+      context: ./docker/bbs
+    environment:
+      - VIRTUAL_HOST=bbs.localhost
+      - LETSENCRYPT_HOST=bbs.localhost
+      - LETSENCRYPT_EMAIL=postmaster@localhost
+      - CERT_NAME=default
+    volumes:
+      - ./log:/var/log/nginx/web
+    networks:
+      - shared
+
+networks:
+  shared:
+
+volumes:
+  proxy:
