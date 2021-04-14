@@ -30,16 +30,26 @@ services:
     networks:
       - shared
 
+  nginx:
+    image: nginx
+    environment:
+      VIRTUAL_HOST: example.com
+      LETSENCRYPT_HOST: example.com
+      LETSENCRYPT_EMAIL: postmaster@example.com
+    volumes:
+      - ./docker/web/index.html:/usr/share/nginx/html/index.html
+    networks:
+      - shared
+
   bbs:
     image: azum/bbs
     container_name: bbs
     build:
       context: ./docker/bbs
     environment:
-      - VIRTUAL_HOST=bbs.localhost
-      - LETSENCRYPT_HOST=bbs.localhost
-      - LETSENCRYPT_EMAIL=postmaster@localhost
-      - CERT_NAME=default
+      - VIRTUAL_HOST=bbs.example.com
+      - LETSENCRYPT_HOST=bbs.example.com
+      - LETSENCRYPT_EMAIL=postmaster@example.com
     volumes:
       - ./log:/var/log/nginx/web
     networks:
